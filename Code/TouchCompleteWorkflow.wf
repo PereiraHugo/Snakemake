@@ -1,0 +1,44 @@
+rule EndAnalysis :
+  input : 'loadingdatabase.txt'
+  message : 'End of the Analysis'
+
+rule GetInformations :
+  message : 'Get information from DataBase'
+  output : 'information.txt'
+  shell : 'touch information.txt'
+
+rule PreProcessing :
+  input : 'information.txt'
+  message : 'Run prepocessing'
+  output : 'preprocessing.txt'
+  shell : 'touch preprocessing.txt'
+  
+rule Mapping :
+  input : 'preprocessing.txt'
+  message : 'Execute mapping'
+  output : 'mapping.txt'
+  shell : 'touch mapping.txt'
+  
+rule ComputeSatistics :
+  input : 'mapping.txt'
+  message : 'Compute some statistics'
+  output : 'statistics.txt'
+  shell : 'touch statistics.txt'
+  
+rule DESeq :
+  input : 'statistics.txt'
+  message : 'Run differential expression analysis'
+  output : 'deseq.txt'
+  shell : 'touch deseq.txt'
+  
+rule VariantCalling :
+  input : 'statistics.txt'
+  message : 'Proceding to Variant Calling'
+  output : 'variantcalling.txt'
+  shell : 'touch variantcalling.txt'
+  
+rule LoadingDatabase :
+  input : 'variantcalling.txt', 'deseq.txt'
+  message : 'Loading into DataBase'
+  output : 'loadingdatabase.txt'
+  shell : 'touch loadingdatabase.txt'

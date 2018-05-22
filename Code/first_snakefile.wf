@@ -1,0 +1,9 @@
+rule all :
+  input : 
+    'LoremIpsum.txt'
+  message : 'First Snakefil Done'
+  
+rule FillText :
+  params : config['LoremImpsum']
+  output : 'LoremIpsum.txt'
+  shell : 'echo "{params}" > {output}'

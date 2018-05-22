@@ -1,0 +1,25 @@
+rule target :
+  input : 
+    expand('{repertory}{filename}_{suffix}{extension}',
+           repertory = 'Rule3/',
+           filename = config['Names'],
+           suffix = config['Suffix'],
+           extension = '.txt')
+  
+  message : 'You know to use wildcards'
+  
+rule one :
+  params : '{names}'
+  output : temp('Rule1/{names}.txt')
+  shell : 'touch Rule1/{params}.txt'
+
+rule two :
+  input : 'Rule1/{names}.txt'
+  output : temp('Rule2/{names}.txt')
+  shell : 'touch Rule2/$(basename {input} .txt).txt'
+  
+rule three :
+  input : 'Rule2/{names}.txt'
+  params : config['Suffix']
+  output : temp('Rule3/{names}_{params}.txt')
+  shell : 'touch Rule3/$(basename {input} .txt)_{params}.txt'

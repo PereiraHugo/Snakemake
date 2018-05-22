@@ -1,0 +1,162 @@
+'''
+rule full_example :
+  input : ancient/expand
+  params :
+  output : protected/temp/touch/dynamic/expand
+  threads : 
+  version :
+  message :
+  log :
+  resources :
+  priority :
+  benchmark :
+  shadow : shallow/full
+  shell/script/run :
+  
+onsuccess :
+onerror :
+localrules :
+include :
+
+Lorem Ipsum comme text
+'''
+
+rule target :
+  input : 
+    expand('{repertory}{filename}{suffix}{extension}',
+           repertory = 'Centrifuge/',
+           filename = ['Sample1','Sample2','Sample3','Sample4'],
+           suffix = '_classification',
+           extension = '.txt'),
+    expand('{repertory}{filename}{suffix}{extension}',
+           repertory = 'Centrifuge/',
+           filename = ['Sample1','Sample2','Sample3','Sample4'],
+           suffix = '_centrifuge_report',
+           extension = '.tsv'),
+    expand('{repertory}{filename}{extension}',
+           repertory = 'BAM/',
+           filename = ['Sample1','Sample2','Sample3','Sample4'],
+           extension = '.bam')
+  message :
+    'End of tutorial'
+  threads : 
+    1
+
+rule Unzip :
+  input : 
+    config['fastqgz']
+  output :
+    temp('Unzip/Temp.fastq')
+  threads : 
+    1
+  shell : 
+    '''
+gzip -dc {input} > {output}
+'''
+
+rule GetFastqSample :
+  input : 
+    'Unzip/Temp.fastq'
+  params :
+    500000
+  output :
+    'Sample/{name}.fastq'
+  message :
+    'Creating Sample named : {output}'
+  threads : 
+    1
+  shell : 
+    '''module load NGSutils/1.0;
+AleaReads.pl --infile={input} --nbread={params} > {output}
+'''
+
+rule FastqCAnalysis :
+  input : 
+    'Sample/{name}.fastq'
+  params :
+    'FastqC/'
+  output :
+    'FastqC/{name}_fastqc.html',
+    'FastqC/{name}_fastqc.zip'
+  message :
+    'Analysing {input} with fastqc tool'
+  threads : 
+    1
+  shell : 
+    '''module load fastqc/0.11.3;
+fastqc --outdir {params} -f fastq {input}
+'''
+
+rule CentrifugeAnalysis :
+  input : 
+    fastq = 'Sample/{name}.fastq',    
+    checkfile = expand('{repertory}{filename}{suffix}{extension}',
+                       repertory = 'FastqC/',
+                       filename = ['Sample1','Sample2','Sample3','Sample4'],
+                       suffix = '_fastqc',
+                       extension = '.html'),
+    checkfile2 = expand('{repertory}{filename}{suffix}{extension}',
+                        repertory = 'FastqC/',
+                        filename = ['Sample1','Sample2','Sample3','Sample4'],
+                        suffix = '_fastqc',
+                        extension = '.zip')
+  params :
+    repertory = 'centrifuge_index/'
+  output :
+    classification = 'Centrifuge/{name}_classification.txt',
+    report = 'Centrifuge/{name}_centrifuge_report.tsv'
+  message :
+    'Analysing {input} with centrifuge tool'
+  threads : 
+    10
+  shell : 
+    '''module load centrifuge/1.0.3.b;
+centrifuge -q -p {threads} -x abv {input.fastq} -S {output.classification} --report-file {output.report}
+'''
+
+rule BWA :
+  input : 
+    fastq = 'Sample/{name}.fastq',
+    ref = 'Reference/REF.fa',
+    checkfile = expand('{repertory}{filename}{suffix}{extension}',
+                       repertory = 'FastqC/',
+                       filename = ['Sample1','Sample2','Sample3','Sample4'],
+                       suffix = '_fastqc',
+                       extension = '.html'),
+    checkfile2 = expand('{repertory}{filename}{suffix}{extension}',
+                        repertory = 'FastqC/',
+                        filename = ['Sample1','Sample2','Sample3','Sample4'],
+                        suffix = '_fastqc',
+                        extension = '.zip')
+  params :
+    score = 1
+  output :
+    'BWA/{name}.sam'
+  message :
+    'Mapping {input} with bwa tool'
+  threads : 
+    1
+  shell : 
+    '''module load bwa/0.7.15;
+bwa index {input.ref}
+bwa mem -T {params.score} {input.ref} {input.fastq} > {output}
+'''
+
+rule Samtools :
+  input : 
+    sam = 'BWA/{name}.sam',
+    ref = 'Reference/REF.fa'
+  threads : 
+    1
+  params :
+    repertory = 'BAM/'
+  output :
+    'BAM/{name}.bam'
+  message :
+    'Converting to bam {input} with samtools tool and getting some statistics'
+  shell : 
+    '''module load samtools/1.4;
+samtools view -c -F 4 -S {input.sam} -T {input.ref}
+samtools view -c -f 4 -S {input.sam} -T {input.ref}
+samtools view -bt {input.ref}.fai {input.sam} > {params.repertory}$(basename {input.sam} .sam).bam 
+'''

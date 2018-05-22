@@ -1,0 +1,49 @@
+def filter_files(dict_files_parameters, chosed_parameter):
+	list_to_return = []
+	for key, value in dict(dict_files_parameters).items() :
+		if (value == chosed_parameter ) :
+			list_to_return.append(key)
+	return list_to_return
+
+rule target :
+	input :
+		expand('{repertory}{filename}{extension}', repertory ='r3/', filename = filter_files(config['database']['datatype'], 'PE'), extension = '.r3'),
+		expand('{repertory}{filename}{extension}', repertory ='r3bis/', filename = filter_files(config['database']['datatype'], 'SE'), extension = '.r3')
+	
+rule one :
+	input :
+		lambda wildcards: config['input'][wildcards.input]
+	output :
+		'r1/{input}.r1'
+	shell :
+		"""mkdir -p r1 ; touch r1/$(basename {input} .start).r1;
+                """
+		
+rule two :
+	input :
+		'r1/{input}.r1'
+	output :
+		out = 'r2/{input}{datatype,(PE|SE)}.r2'
+	params :
+		lambda wildcards : config['database']['datatype'][wildcards.input]
+	shell :
+		"""mkdir -p r2 ; touch r2/$(basename {input} .r1){params}.r2;
+tmpFile=$(mktemp tmp/tmp.$(basename {input} .r1).XXXX.out); 
+echo \"tmp_file: ${{tmpFile}}\" """
+
+rule three :
+	input :
+		'r2/{input}SE.r2'
+	output :
+		'r3bis/{input}.r3'
+	shell :
+		"mkdir -p r3bis ; touch r3bis/$(basename {input} SE.r2).r3"
+		
+rule three_bis :
+	input :
+		'r2/{input}PE.r2'
+	output :
+		'r3/{input}.r3'
+	shell :
+		"mkdir -p r3 ; touch r3/$(basename {input} PE.r2).r3"
+		

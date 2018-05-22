@@ -1,0 +1,14 @@
+rule all :
+  input :
+    'Sorted_LoremIpsum.txt'
+  message : 'Second Snakefile Done'
+
+rule FillText :
+  params : config['LoremImpsum']
+  output : 'LoremIpsum.txt'
+  shell : 'echo "{params}" > {output}'
+
+rule SortText :
+  input : 'LoremIpsum.txt'
+  output : 'Sorted_LoremIpsum.txt'
+  shell : 'sort {input} -o {output}'
