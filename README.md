@@ -1,5 +1,5 @@
 # Snakemake
-This project contain a Snakemake's tutorial. This tutorial is composed on several exercice.  
+This project contains a Snakemake's tutorial. This tutorial is composed of several exercises.  
 
 ## Getting Started
 
@@ -7,11 +7,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-Snakemake is a workfow engine base on python.
+Snakemake is a workfow engine based on python.
 
-The last version of Snakemake use python 3.
+The last version of Snakemake uses python 3.
 
-## Exercice
+## Exercise
 
 ## Running the program
 
